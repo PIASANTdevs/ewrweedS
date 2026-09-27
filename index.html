@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мой Личный Онлайн-Кинотеатр</title>
+<style>
+    :root {
+        --bg: #0b0b0f;
+        --panel: #16161d;
+        --accent: #ff9900;
+        --accent-dark: #e08800;
+        --text: #f5f5f7;
+        --muted: #9a9aa5;
+        --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+        color: var(--text);
+        background:
+            radial-gradient(900px 500px at 50% -10%, rgba(255, 153, 0, .18), transparent 60%),
+            var(--bg);
+        display: flex;
+        justify-content: center;
+        padding: 40px 20px 70px;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 880px;
+    }
+
+    /* ── Заголовок ────────────────────────────────────────── */
+    h1 {
+        font-size: clamp(24px, 4vw, 34px);
+        text-align: center;
+        margin: 0 0 8px;
+        letter-spacing: -.02em;
+        color: var(--accent);
+    }
+
+    .subtitle {
+        text-align: center;
+        color: var(--muted);
+        font-size: 14px;
+        margin: 0 0 28px;
+    }
+
+    /* ── Поиск ───────────────────────────────────────────── */
+    .search {
+        display: flex;
+        gap: 10px;
+        padding: 6px;
+        background: var(--panel);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 999px;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+    .search:focus-within {
+        border-color: rgba(255, 153, 0, .6);
+        box-shadow: 0 0 0 4px rgba(255, 153, 0, .15);
+    }
+
+    #kpIdField {
+        flex: 1;
+        min-width: 0;
+        padding: 10px 18px;
+        font: inherit;
+        font-size: 16px;
+        color: var(--text);
+        background: transparent;
+        border: none;
+        outline: none;
+    }
+
+    #kpIdField::placeholder { color: #6b6b76; }
+
+    .btn {
+        font: inherit;
+        font-weight: 700;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: transform .15s, background .2s, box-shadow .2s;
+    }
+
+    .btn:active { transform: scale(.97); }
+
+    .btn:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+    }
+
+    .btn--primary {
+        padding: 12px 28px;
+        color: #1a1a1a;
+        white-space: nowrap;
+        background: linear-gradient(135deg, #ffb340, var(--accent-dark));
+        box-shadow: 0 6px 20px rgba(255, 153, 0, .35);
+    }
+
+    .btn--primary:hover {
+        background: linear-gradient(135deg, #ffc266, #f09400);
+        box-shadow: 0 8px 26px rgba(255, 153, 0, .5);
+    }
+
+    .btn--ghost {
+        padding: 9px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 999px;
+    }
+
+    .btn--ghost:hover { background: rgba(255,255,255,.13); }
+
+    /* ── Ошибка ──────────────────────────────────────────── */
+    .error {
+        margin: 12px 0 0;
+        text-align: center;
+        font-size: 14px;
+        color: #ff6b6b;
+        animation: shake .35s ease;
+    }
+
+    .error[hidden] { display: none; }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25%      { transform: translateX(-6px); }
+        75%      { transform: translateX(6px); }
+    }
+
+    /* ── Плеер ───────────────────────────────────────────── */
+    .player-box {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        margin-top: 24px;
+        overflow: hidden;
+        background: #000;
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: var(--radius);
+        box-shadow: 0 24px 60px rgba(0,0,0,.7);
+        display: none;
+    }
+
+    .player-box.visible {
+        display: block;
+        animation: fadeUp .35s ease both;
+    }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .player-box iframe {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+
+    .spinner {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        background: rgba(0,0,0,.65);
+        transition: opacity .3s;
+    }
+
+    .spinner[hidden] { display: none; }
+
+    .spinner::after {
+        content: "";
+        width: 46px;
+        height: 46px;
+        border: 3px solid rgba(255,255,255,.15);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Нижняя панель ───────────────────────────────────── */
+    .player-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+        animation: fadeUp .35s ease both;
+    }
+
+    .player-bar[hidden] { display: none; }
+
+    .player-title {
+        font-size: 14px;
+        color: var(--muted);
+    }
+
+    .player-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    /* ── Мобильные ───────────────────────────────────────── */
+    @media (max-width: 560px) {
+        body { padding: 24px 14px 50px; }
+
+        .search {
+            flex-direction: column;
+            padding: 10px;
+            border-radius: 18px;
+        }
+
+        #kpIdField {
+            padding: 10px 12px;
+            text-align: center;
+        }
+
+        .btn--primary {
+            width: 100%;
+            padding: 14px;
+        }
+
+        .player-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .player-actions { justify-content: space-between; }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🍿 Мой Личный Онлайн-Кинотеатр</h1>
+    <p class="subtitle">
+        Введите ID фильма с Кинопоиска или вставьте ссылку — плеер подставит его автоматически
+    </p>
+
+    <form class="search" id="searchForm" novalidate>
+        <input
+            id="kpIdField"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Например, 435"
+            aria-label="ID фильма на Кинопоиске"
+            value="435"
+        >
+        <button type="submit" class="btn btn--primary">Смотреть фильм</button>
+    </form>
+
+    <p class="error" id="errorMsg" role="alert" hidden></p>
+
+    <div class="player-box" id="videoBox">
+        <div class="spinner" id="spinner" aria-label="Загрузка плеера"></div>
+        <iframe
+            id="cinemaFrame"
+            src="about:blank"
+            title="Видеоплеер"
+            allowfullscreen
+            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+            referrerpolicy="origin"
+            loading="lazy"
+        ></iframe>
+    </div>
+
+    <div class="player-bar" id="playerBar" hidden>
+        <span class="player-title" id="playerTitle"></span>
+        <div class="player-actions">
+            <button type="button" class="btn btn--ghost" id="reloadBtn">
+                Перезагрузить
+            </button>
+            <button type="button" class="btn btn--ghost" id="openTabBtn">
+                Открыть в новой вкладке
+            </button>
+            <button type="button" class="btn btn--ghost" id="closeBtn">
+                Закрыть
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ══════════════════════════════════════════════════════════
+       НАСТРОЙКИ
+       PLAYER_BASE — адрес embed-плеера, который принимает ID
+       фильма в конце URL. Замените на реальный источник.
+       ══════════════════════════════════════════════════════════ */
+    const PLAYER_BASE  = 'https://example.com/embed/'; // TODO: заменить
+    const LOAD_TIMEOUT = 15000; // мс — страховка от «зависшего» iframe
+
+    /* ── Элементы ─────────────────────────────────────────── */
+    const $ = (id) => document.getElementById(id);
+
+    const form        = $('searchForm');
+    const input       = $('kpIdField');
+    const errorMsg    = $('errorMsg');
+    const videoBox    = $('videoBox');
+    const iframe      = $('cinemaFrame');
+    const spinner     = $('spinner');
+    const playerBar   = $('playerBar');
+    const playerTitle = $('playerTitle');
+    const reloadBtn   = $('reloadBtn');
+    const openTabBtn  = $('openTabBtn');
+    const closeBtn    = $('closeBtn');
+
+    let currentId  = '';
+    let currentUrl = '';
+    let isLoading  = false;
+    let loadTimer  = null;
+
+    /* ── Утилиты ──────────────────────────────────────────── */
+    const isDigits = (v) => /^\d{1,9}$/.test(v);
+
+    /**
+     * Принимает чистый ID ("435") или ссылку на Кинопоиск
+     * ("https://www.kinopoisk.ru/film/435/") и возвращает ID.
+     */
+    function extractId(raw) {
+        const value = String(raw).trim();
+        if (isDigits(value)) return value;
+
+        const match =
+            value.match(/(?:film|series)\/(\d{1,9})/i) ||
+            value.match(/(\d{1,9})/);
+
+        return match ? match[1] : '';
+    }
+
+    function buildUrl(base, id) {
+        return base.replace(/\/+$/, '') + '/' + encodeURIComponent(id);
+    }
+
+    function showError(text) {
+        errorMsg.textContent = text;
+        errorMsg.hidden = false;
+
+        errorMsg.style.animation = 'none';
+        void errorMsg.offsetWidth;
+        errorMsg.style.animation = '';
+
+        input.focus();
+        input.select();
+    }
+
+    function clearError() {
+        errorMsg.hidden = true;
+        errorMsg.textContent = '';
+    }
+
+    /* ── Плеер ────────────────────────────────────────────── */
+    function startLoading() {
+        isLoading = true;
+        spinner.hidden = false;
+
+        clearTimeout(loadTimer);
+        loadTimer = setTimeout(() => {
+            isLoading = false;
+            spinner.hidden = true;
+        }, LOAD_TIMEOUT);
+    }
+
+    function startMovie(id) {
+        currentId  = id;
+        currentUrl = buildUrl(PLAYER_BASE, id);
+
+        startLoading();
+
+        iframe.src = currentUrl;
+        videoBox.classList.add('visible');
+        playerBar.hidden = false;
+        playerTitle.textContent = 'Фильм #' + id;
+    }
+
+    function reloadPlayer() {
+        if (!currentUrl) return;
+
+        startLoading();
+
+        // Принудительный перезапуск iframe
+        iframe.src = 'about:blank';
+        requestAnimationFrame(() => {
+            iframe.src = currentUrl;
+        });
+    }
+
+    function closePlayer() {
+        clearTimeout(loadTimer);
+        isLoading = false;
+        currentUrl = '';
+        spinner.hidden = true;
+        videoBox.classList.remove('visible');
+        playerBar.hidden = true;
+        iframe.src = 'about:blank';
+        playerTitle.textContent = '';
+        input.focus();
+    }
+
+    /* ── Обработчики ──────────────────────────────────────── */
+    function onSubmit(event) {
+        event.preventDefault();
+        clearError();
+
+        const raw = input.value.trim();
+        if (!raw) {
+            showError('Введите ID фильма — например, 435.');
+            return;
+        }
+
+        const id = extractId(raw);
+        if (!id) {
+            showError('ID должен состоять из цифр (до 9 знаков) или быть ссылкой на Кинопоиск.');
+            return;
+        }
+
+        input.value = id;
+        startMovie(id);
+    }
+
+    form.addEventListener('submit', onSubmit);
+
+    input.addEventListener('input', () => {
+        if (!errorMsg.hidden) clearError();
+    });
+
+    iframe.addEventListener('load', () => {
+        if (!isLoading) return;
+        isLoading = false;
+        clearTimeout(loadTimer);
+        spinner.hidden = true;
+    });
+
+    reloadBtn.addEventListener('click', reloadPlayer);
+
+    openTabBtn.addEventListener('click', () => {
+        if (currentUrl) window.open(currentUrl, '_blank', 'noopener');
+    });
+
+    closeBtn.addEventListener('click', closePlayer);
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && videoBox.classList.contains('visible')) {
+            closePlayer();
+        }
+    });
+
+    /* ── Старт ────────────────────────────────────────────── */
+    input.focus();
+})();
+</script>
+
+</body>
+</html>
