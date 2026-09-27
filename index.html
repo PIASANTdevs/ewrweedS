@@ -51,7 +51,6 @@
         margin: 0 0 28px;
     }
 
-    /* ── Поиск ───────────────────────────────────────────── */
     .search {
         display: flex;
         gap: 10px;
@@ -92,11 +91,6 @@
 
     .btn:active { transform: scale(.97); }
 
-    .btn:focus-visible {
-        outline: 2px solid #fff;
-        outline-offset: 2px;
-    }
-
     .btn--primary {
         padding: 12px 28px;
         color: #1a1a1a;
@@ -110,19 +104,6 @@
         box-shadow: 0 8px 26px rgba(255, 153, 0, .5);
     }
 
-    .btn--ghost {
-        padding: 9px 16px;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text);
-        background: rgba(255,255,255,.06);
-        border: 1px solid rgba(255,255,255,.1);
-        border-radius: 999px;
-    }
-
-    .btn--ghost:hover { background: rgba(255,255,255,.13); }
-
-    /* ── Ошибка ──────────────────────────────────────────── */
     .error {
         margin: 12px 0 0;
         text-align: center;
@@ -139,20 +120,13 @@
         75%      { transform: translateX(6px); }
     }
 
-    /* ── Плеер ───────────────────────────────────────────── */
-    .player-box {
-        position: relative;
-        aspect-ratio: 16 / 9;
+    /* Контейнер, который заполнит Kinobox */
+    #player {
         margin-top: 24px;
-        overflow: hidden;
-        background: #000;
-        border: 1px solid rgba(255,255,255,.08);
-        border-radius: var(--radius);
-        box-shadow: 0 24px 60px rgba(0,0,0,.7);
         display: none;
     }
 
-    .player-box.visible {
+    #player.visible {
         display: block;
         animation: fadeUp .35s ease both;
     }
@@ -161,89 +135,6 @@
         from { opacity: 0; transform: translateY(14px); }
         to   { opacity: 1; transform: translateY(0); }
     }
-
-    .player-box iframe {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        border: 0;
-    }
-
-    .spinner {
-        position: absolute;
-        inset: 0;
-        z-index: 2;
-        display: grid;
-        place-items: center;
-        background: rgba(0,0,0,.65);
-        transition: opacity .3s;
-    }
-
-    .spinner[hidden] { display: none; }
-
-    .spinner::after {
-        content: "";
-        width: 46px;
-        height: 46px;
-        border: 3px solid rgba(255,255,255,.15);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        animation: spin .8s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Нижняя панель ───────────────────────────────────── */
-    .player-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-top: 14px;
-        flex-wrap: wrap;
-        animation: fadeUp .35s ease both;
-    }
-
-    .player-bar[hidden] { display: none; }
-
-    .player-title {
-        font-size: 14px;
-        color: var(--muted);
-    }
-
-    .player-actions {
-        display: flex;
-        gap: 8px;
-    }
-
-    /* ── Мобильные ───────────────────────────────────────── */
-    @media (max-width: 560px) {
-        body { padding: 24px 14px 50px; }
-
-        .search {
-            flex-direction: column;
-            padding: 10px;
-            border-radius: 18px;
-        }
-
-        #kpIdField {
-            padding: 10px 12px;
-            text-align: center;
-        }
-
-        .btn--primary {
-            width: 100%;
-            padding: 14px;
-        }
-
-        .player-bar {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .player-actions { justify-content: space-between; }
-    }
 </style>
 </head>
 <body>
@@ -251,7 +142,7 @@
 <div class="container">
     <h1>🍿 Мой Личный Онлайн-Кинотеатр</h1>
     <p class="subtitle">
-        Введите ID фильма с Кинопоиска или вставьте ссылку — плеер подставит его автоматически
+        Введите ID фильма с Кинопоиска — плеер подставит его автоматически
     </p>
 
     <form class="search" id="searchForm" novalidate>
@@ -270,76 +161,24 @@
 
     <p class="error" id="errorMsg" role="alert" hidden></p>
 
-    <div class="player-box" id="videoBox">
-        <div class="spinner" id="spinner" aria-label="Загрузка плеера"></div>
-        <iframe
-            id="cinemaFrame"
-            src="about:blank"
-            title="Видеоплеер"
-            allowfullscreen
-            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-            referrerpolicy="origin"
-            loading="lazy"
-        ></iframe>
-    </div>
-
-    <div class="player-bar" id="playerBar" hidden>
-        <span class="player-title" id="playerTitle"></span>
-        <div class="player-actions">
-            <button type="button" class="btn btn--ghost" id="reloadBtn">
-                Перезагрузить
-            </button>
-            <button type="button" class="btn btn--ghost" id="openTabBtn">
-                Открыть в новой вкладке
-            </button>
-            <button type="button" class="btn btn--ghost" id="closeBtn">
-                Закрыть
-            </button>
-        </div>
-    </div>
+    <!-- Сюда Kinobox встроит свой плеер -->
+    <div id="player"></div>
 </div>
+
+<!-- Подключаем библиотеку Kinobox -->
+<script src="https://kinobox.tv/kinobox.min.js"></script>
 
 <script>
 (function () {
     'use strict';
 
-    /* ══════════════════════════════════════════════════════════
-       НАСТРОЙКИ
-       PLAYER_BASE — база embed-плеера. ID приклеивается
-       в конец через слеш:
-       PLAYER_BASE = "https://kinodivbox.github.io/"
-       id = "435" → "https://kinodivbox.github.io/435"
-       ══════════════════════════════════════════════════════════ */
-    const PLAYER_BASE  = 'https://kinodivbox.github.io/';
-    const LOAD_TIMEOUT = 15000; // мс — страховка от «зависшего» iframe
+    const form     = document.getElementById('searchForm');
+    const input    = document.getElementById('kpIdField');
+    const errorMsg = document.getElementById('errorMsg');
+    const player   = document.getElementById('player');
 
-    /* ── Элементы ─────────────────────────────────────────── */
-    const $ = (id) => document.getElementById(id);
-
-    const form        = $('searchForm');
-    const input       = $('kpIdField');
-    const errorMsg    = $('errorMsg');
-    const videoBox    = $('videoBox');
-    const iframe      = $('cinemaFrame');
-    const spinner     = $('spinner');
-    const playerBar   = $('playerBar');
-    const playerTitle = $('playerTitle');
-    const reloadBtn   = $('reloadBtn');
-    const openTabBtn  = $('openTabBtn');
-    const closeBtn    = $('closeBtn');
-
-    let currentId  = '';
-    let currentUrl = '';
-    let isLoading  = false;
-    let loadTimer  = null;
-
-    /* ── Утилиты ──────────────────────────────────────────── */
     const isDigits = (v) => /^\d{1,9}$/.test(v);
 
-    /**
-     * Принимает чистый ID ("435") или ссылку на Кинопоиск
-     * ("https://www.kinopoisk.ru/film/435/") и возвращает ID.
-     */
     function extractId(raw) {
         const value = String(raw).trim();
         if (isDigits(value)) return value;
@@ -349,15 +188,6 @@
             value.match(/(\d{1,9})/);
 
         return match ? match[1] : '';
-    }
-
-    /**
-     * Собирает итоговый URL: base + id (со слешем между ними).
-     * PLAYER_BASE = "https://kinodivbox.github.io/", id = "435"
-     *   → "https://kinodivbox.github.io/435"
-     */
-    function buildUrl(base, id) {
-        return base.replace(/\/+$/, '') + '/' + encodeURIComponent(id);
     }
 
     function showError(text) {
@@ -377,56 +207,21 @@
         errorMsg.textContent = '';
     }
 
-    /* ── Плеер ────────────────────────────────────────────── */
-    function startLoading() {
-        isLoading = true;
-        spinner.hidden = false;
-
-        clearTimeout(loadTimer);
-        loadTimer = setTimeout(() => {
-            isLoading = false;
-            spinner.hidden = true;
-        }, LOAD_TIMEOUT);
-    }
-
     function startMovie(id) {
-        currentId  = id;
-        currentUrl = buildUrl(PLAYER_BASE, id);
+        // Очищаем предыдущий плеер
+        player.innerHTML = '';
 
-        startLoading();
-
-        iframe.src = currentUrl;
-        videoBox.classList.add('visible');
-        playerBar.hidden = false;
-        playerTitle.textContent = 'Фильм #' + id;
-    }
-
-    function reloadPlayer() {
-        if (!currentUrl) return;
-
-        startLoading();
-
-        // Принудительный перезапуск iframe
-        iframe.src = 'about:blank';
-        requestAnimationFrame(() => {
-            iframe.src = currentUrl;
+        // Инициализируем Kinobox с нужным ID
+        kinobox('#player', {
+            search: { kinopoisk: id },
+            autoPlay: false,
+            controls: true
         });
+
+        player.classList.add('visible');
     }
 
-    function closePlayer() {
-        clearTimeout(loadTimer);
-        isLoading = false;
-        currentUrl = '';
-        spinner.hidden = true;
-        videoBox.classList.remove('visible');
-        playerBar.hidden = true;
-        iframe.src = 'about:blank';
-        playerTitle.textContent = '';
-        input.focus();
-    }
-
-    /* ── Обработчики ──────────────────────────────────────── */
-    function onSubmit(event) {
+    form.addEventListener('submit', function (event) {
         event.preventDefault();
         clearError();
 
@@ -444,36 +239,12 @@
 
         input.value = id;
         startMovie(id);
-    }
+    });
 
-    form.addEventListener('submit', onSubmit);
-
-    input.addEventListener('input', () => {
+    input.addEventListener('input', function () {
         if (!errorMsg.hidden) clearError();
     });
 
-    iframe.addEventListener('load', () => {
-        if (!isLoading) return;
-        isLoading = false;
-        clearTimeout(loadTimer);
-        spinner.hidden = true;
-    });
-
-    reloadBtn.addEventListener('click', reloadPlayer);
-
-    openTabBtn.addEventListener('click', () => {
-        if (currentUrl) window.open(currentUrl, '_blank', 'noopener');
-    });
-
-    closeBtn.addEventListener('click', closePlayer);
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && videoBox.classList.contains('visible')) {
-            closePlayer();
-        }
-    });
-
-    /* ── Старт ────────────────────────────────────────────── */
     input.focus();
 })();
 </script>
