@@ -36,7 +36,6 @@
         max-width: 880px;
     }
 
-    /* ── Заголовок ────────────────────────────────────────── */
     h1 {
         font-size: clamp(24px, 4vw, 34px);
         text-align: center;
@@ -306,10 +305,12 @@
 
     /* ══════════════════════════════════════════════════════════
        НАСТРОЙКИ
-       PLAYER_BASE — адрес embed-плеера, который принимает ID
-       фильма в конце URL. Замените на реальный источник.
+       PLAYER_BASE — база embed-плеера. ID приклеивается
+       в конец через слеш:
+       PLAYER_BASE = "https://kinodivbox.github.io/"
+       id = "435" → "https://kinodivbox.github.io/435"
        ══════════════════════════════════════════════════════════ */
-    const PLAYER_BASE  = 'https://example.com/embed/'; // TODO: заменить
+    const PLAYER_BASE  = 'https://kinodivbox.github.io/';
     const LOAD_TIMEOUT = 15000; // мс — страховка от «зависшего» iframe
 
     /* ── Элементы ─────────────────────────────────────────── */
@@ -350,6 +351,11 @@
         return match ? match[1] : '';
     }
 
+    /**
+     * Собирает итоговый URL: base + id (со слешем между ними).
+     * PLAYER_BASE = "https://kinodivbox.github.io/", id = "435"
+     *   → "https://kinodivbox.github.io/435"
+     */
     function buildUrl(base, id) {
         return base.replace(/\/+$/, '') + '/' + encodeURIComponent(id);
     }
