@@ -3,251 +3,157 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Мой Личный Онлайн-Кинотеатр</title>
+<title>Онлайн-кинотеатр</title>
 <style>
-    :root {
-        --bg: #0b0b0f;
-        --panel: #16161d;
-        --accent: #ff9900;
-        --accent-dark: #e08800;
-        --text: #f5f5f7;
-        --muted: #9a9aa5;
-        --radius: 14px;
-    }
-
     * { box-sizing: border-box; }
-
     body {
         margin: 0;
         min-height: 100vh;
-        font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
-        color: var(--text);
-        background:
-            radial-gradient(900px 500px at 50% -10%, rgba(255, 153, 0, .18), transparent 60%),
-            var(--bg);
+        font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+        background: #0b0b0f;
+        color: #f5f5f7;
+        padding: 40px 20px;
         display: flex;
         justify-content: center;
-        padding: 40px 20px 70px;
-        -webkit-font-smoothing: antialiased;
     }
-
-    .container {
-        width: 100%;
-        max-width: 880px;
-    }
-
+    .wrap { width: 100%; max-width: 880px; }
     h1 {
-        font-size: clamp(24px, 4vw, 34px);
+        color: #ff9900;
         text-align: center;
-        margin: 0 0 8px;
-        letter-spacing: -.02em;
-        color: var(--accent);
+        margin: 0 0 24px;
+        font-size: clamp(22px, 4vw, 32px);
     }
-
-    .subtitle {
-        text-align: center;
-        color: var(--muted);
-        font-size: 14px;
-        margin: 0 0 28px;
-    }
-
-    .search {
-        display: flex;
-        gap: 10px;
-        padding: 6px;
-        background: var(--panel);
-        border: 1px solid rgba(255,255,255,.08);
-        border-radius: 999px;
-        transition: border-color .2s, box-shadow .2s;
-    }
-
-    .search:focus-within {
-        border-color: rgba(255, 153, 0, .6);
-        box-shadow: 0 0 0 4px rgba(255, 153, 0, .15);
-    }
-
-    #kpIdField {
+    .row { display: flex; gap: 10px; margin-bottom: 14px; }
+    input {
         flex: 1;
-        min-width: 0;
-        padding: 10px 18px;
-        font: inherit;
+        padding: 14px 18px;
         font-size: 16px;
-        color: var(--text);
-        background: transparent;
-        border: none;
+        color: #fff;
+        background: #16161d;
+        border: 1px solid #2a2a33;
+        border-radius: 10px;
         outline: none;
     }
-
-    #kpIdField::placeholder { color: #6b6b76; }
-
-    .btn {
-        font: inherit;
+    input:focus { border-color: #ff9900; }
+    button {
+        padding: 14px 28px;
+        font-size: 16px;
         font-weight: 700;
-        border: none;
-        border-radius: 999px;
-        cursor: pointer;
-        transition: transform .15s, background .2s, box-shadow .2s;
-    }
-
-    .btn:active { transform: scale(.97); }
-
-    .btn--primary {
-        padding: 12px 28px;
         color: #1a1a1a;
+        background: #ff9900;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
         white-space: nowrap;
-        background: linear-gradient(135deg, #ffb340, var(--accent-dark));
-        box-shadow: 0 6px 20px rgba(255, 153, 0, .35);
     }
-
-    .btn--primary:hover {
-        background: linear-gradient(135deg, #ffc266, #f09400);
-        box-shadow: 0 8px 26px rgba(255, 153, 0, .5);
-    }
-
-    .error {
-        margin: 12px 0 0;
-        text-align: center;
-        font-size: 14px;
+    button:hover { background: #ffb340; }
+    button:active { transform: scale(.98); }
+    .msg {
+        min-height: 22px;
+        margin: 0 0 14px;
         color: #ff6b6b;
-        animation: shake .35s ease;
+        font-size: 14px;
     }
-
-    .error[hidden] { display: none; }
-
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        25%      { transform: translateX(-6px); }
-        75%      { transform: translateX(6px); }
-    }
-
-    /* Контейнер, который заполнит Kinobox */
     #player {
-        margin-top: 24px;
+        aspect-ratio: 16 / 9;
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
         display: none;
     }
-
-    #player.visible {
+    #player.visible { display: block; }
+    #player iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
         display: block;
-        animation: fadeUp .35s ease both;
     }
-
-    @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(14px); }
-        to   { opacity: 1; transform: translateY(0); }
+    @media (max-width: 560px) {
+        .row { flex-direction: column; }
     }
 </style>
 </head>
 <body>
+<div class="wrap">
+    <h1>🍿 Онлайн-кинотеатр</h1>
 
-<div class="container">
-    <h1>🍿 Мой Личный Онлайн-Кинотеатр</h1>
-    <p class="subtitle">
-        Введите ID фильма с Кинопоиска — плеер подставит его автоматически
-    </p>
+    <div class="row">
+        <input id="kpId" type="text" inputmode="numeric"
+               placeholder="ID фильма с Кинопоиска" value="435">
+        <button id="goBtn" type="button">Смотреть</button>
+    </div>
 
-    <form class="search" id="searchForm" novalidate>
-        <input
-            id="kpIdField"
-            type="text"
-            inputmode="numeric"
-            autocomplete="off"
-            spellcheck="false"
-            placeholder="Например, 435"
-            aria-label="ID фильма на Кинопоиске"
-            value="435"
-        >
-        <button type="submit" class="btn btn--primary">Смотреть фильм</button>
-    </form>
-
-    <p class="error" id="errorMsg" role="alert" hidden></p>
-
-    <!-- Сюда Kinobox встроит свой плеер -->
+    <p class="msg" id="msg"></p>
     <div id="player"></div>
 </div>
 
-<!-- Подключаем библиотеку Kinobox -->
+<!-- Библиотека Kinobox (если не загрузится — сработает резервный путь) -->
 <script src="https://kinobox.tv/kinobox.min.js"></script>
 
 <script>
 (function () {
-    'use strict';
+    var input = document.getElementById('kpId');
+    var btn   = document.getElementById('goBtn');
+    var msg   = document.getElementById('msg');
+    var box   = document.getElementById('player');
 
-    const form     = document.getElementById('searchForm');
-    const input    = document.getElementById('kpIdField');
-    const errorMsg = document.getElementById('errorMsg');
-    const player   = document.getElementById('player');
+    function setMsg(t) { msg.textContent = t || ''; }
 
-    const isDigits = (v) => /^\d{1,9}$/.test(v);
-
-    function extractId(raw) {
-        const value = String(raw).trim();
-        if (isDigits(value)) return value;
-
-        const match =
-            value.match(/(?:film|series)\/(\d{1,9})/i) ||
-            value.match(/(\d{1,9})/);
-
-        return match ? match[1] : '';
+    function normalizeId(raw) {
+        var v = String(raw || '').trim();
+        if (/^\d{1,9}$/.test(v)) return v;
+        var m = v.match(/(?:film|series)\/(\d{1,9})/i) || v.match(/(\d{1,9})/);
+        return m ? m[1] : '';
     }
 
-    function showError(text) {
-        errorMsg.textContent = text;
-        errorMsg.hidden = false;
+    function play() {
+        setMsg('');
+        var id = normalizeId(input.value);
 
-        errorMsg.style.animation = 'none';
-        void errorMsg.offsetWidth;
-        errorMsg.style.animation = '';
-
-        input.focus();
-        input.select();
-    }
-
-    function clearError() {
-        errorMsg.hidden = true;
-        errorMsg.textContent = '';
-    }
-
-    function startMovie(id) {
-        // Очищаем предыдущий плеер
-        player.innerHTML = '';
-
-        // Инициализируем Kinobox с нужным ID
-        kinobox('#player', {
-            search: { kinopoisk: id },
-            autoPlay: false,
-            controls: true
-        });
-
-        player.classList.add('visible');
-    }
-
-    form.addEventListener('submit', function (event) {
-        event.preventDefault();
-        clearError();
-
-        const raw = input.value.trim();
-        if (!raw) {
-            showError('Введите ID фильма — например, 435.');
-            return;
-        }
-
-        const id = extractId(raw);
         if (!id) {
-            showError('ID должен состоять из цифр (до 9 знаков) или быть ссылкой на Кинопоиск.');
+            setMsg('Введите цифровой ID фильма (например, 435)');
+            input.focus();
             return;
         }
 
         input.value = id;
-        startMovie(id);
-    });
 
-    input.addEventListener('input', function () {
-        if (!errorMsg.hidden) clearError();
+        // 1. Если библиотека не загрузилась — используем iframe-резерв
+        if (typeof kinobox === 'undefined') {
+            setMsg('Библиотека Kinobox не загрузилась, открываю через iframe…');
+            box.innerHTML = '';
+            var iframe = document.createElement('iframe');
+            iframe.src = 'https://kinodivbox.netlify.app/?id=' + encodeURIComponent(id);
+            iframe.allowFullscreen = true;
+            iframe.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
+            iframe.setAttribute('referrerpolicy', 'origin');
+            box.appendChild(iframe);
+            box.classList.add('visible');
+            return;
+        }
+
+        // 2. Основной путь — библиотека Kinobox
+        try {
+            box.innerHTML = '';
+            box.classList.add('visible');
+            kinobox(box, {
+                search: { kinopoisk: id },
+                autoPlay: false
+            });
+        } catch (e) {
+            setMsg('Ошибка плеера: ' + e.message);
+            console.error(e);
+        }
+    }
+
+    btn.addEventListener('click', play);
+
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); play(); }
     });
 
     input.focus();
 })();
 </script>
-
 </body>
 </html>
